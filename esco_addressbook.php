@@ -16,12 +16,14 @@ class esco_addressbook extends rcube_plugin
 
     public function getAddressbookList($p)
     {
+        if(!isset(rcmail::get_instance()->user->data['esco_user_inited']) || rcmail::get_instance()->user->data['esco_user_inited'] != "DONE"){
+            rcmail::get_instance()->plugins->exec_hook('refresh_user');
+        }
         $config = rcmail::get_instance()->config;
         $sources_config = (array)$config->get('esco_ldap', array());
 
+        $user_data = $_SESSION['user_data'];
         foreach ($sources_config as $id => $source) {
-            $user_data = $_SESSION['user_data'];
-
             $valid = true;
             foreach($source["dynamic_user_fields"] as $field){
                 if(!isset($user_data[strtolower($field)])){
