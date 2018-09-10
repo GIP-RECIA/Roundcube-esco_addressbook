@@ -12,6 +12,35 @@ class esco_addressbook extends rcube_plugin
     {
         $this->add_hook('addressbooks_list', array($this, 'getAddressbookList'));
         $this->add_hook('addressbook_get', array($this, 'getAddressbookContent'));
+
+        $config = rcmail::get_instance()->config;
+        $sources_config = (array)$config->get('esco_ldap', array());
+        $user_data = $_SESSION['user_data'];
+
+        $autocomplete_sources = (array) $config->get('autocomplete_addressbooks', 'sql');
+
+        foreach($sources_config as $id => $source){
+            if($this->isSourceAvailable($source,$user_data)){
+                $autocomplete_sources[] = $id;
+            }
+        }
+
+        $config->set('autocomplete_addressbooks', $autocomplete_sources);
+    }
+
+    /**
+     * Check wether or not the user can access the given address book
+     * @param array $source
+     * @param array $user_data
+     * @return bool
+     */
+    private function isSourceAvailable(array $source, array $user_data){
+        foreach($source["dynamic_user_fields"] as $field){
+            if(!isset($user_data[strtolower($field)])){
+                return false;
+            }
+        }
+        return true;
     }
 
     public function getAddressbookList($p)
@@ -24,14 +53,7 @@ class esco_addressbook extends rcube_plugin
 
         $user_data = $_SESSION['user_data'];
         foreach ($sources_config as $id => $source) {
-            $valid = true;
-            foreach($source["dynamic_user_fields"] as $field){
-                if(!isset($user_data[strtolower($field)])){
-                    $valid = false;
-                }
-            }
-
-            if($valid){
+            if($this->isSourceAvailable($source,$user_data)){
                 $p['sources'][$id] = array(
                     'id' => $id,
                     'name' => $source["name"],
@@ -57,18 +79,14 @@ class esco_addressbook extends rcube_plugin
         $source = $sources_config[$p["id"]];
         $user_data = $_SESSION['user_data'];
 
-        foreach($source["dynamic_user_fields"] as $field){
-            if(!isset($user_data[strtolower($field)])){
-                return $p;
-            }
+        if($this->isSourceAvailable($source,$user_data)){
+            $p["instance"] = new esco_addressbook_ldap_backend(
+                $source,
+                $config->get('ldap_debug'),
+                '',
+                'uid'
+            );
         }
-
-        $p["instance"] = new esco_addressbook_ldap_backend(
-            $source,
-            $config->get('ldap_debug'),
-            '',
-            'uid'
-        );
         return $p;
     }
 }
