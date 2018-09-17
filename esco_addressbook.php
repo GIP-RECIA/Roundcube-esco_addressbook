@@ -34,7 +34,10 @@ class esco_addressbook extends rcube_plugin
      * @param array $user_data
      * @return bool
      */
-    private function isSourceAvailable(array $source, array $user_data){
+    private function isSourceAvailable(array $source, array $user_data = null){
+        if(is_null($user_data)){
+            return false;
+        }
         foreach($source["dynamic_user_fields"] as $field){
             if(!isset($user_data[strtolower($field)])){
                 return false;
