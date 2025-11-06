@@ -21,6 +21,7 @@ class esco_addressbook extends rcube_plugin
 
         foreach($sources_config as $id => $source){
             if($this->isSourceAvailable($source,$user_data)){
+
                 $autocomplete_sources[] = $id;
             }
         }
@@ -34,16 +35,26 @@ class esco_addressbook extends rcube_plugin
      * @param array $user_data
      * @return bool
      */
-    private function isSourceAvailable(array $source, array $user_data = null){
-        if(is_null($user_data)){
+    private function isSourceAvailable(array $source, array $user_data = null) {
+        if (is_null($user_data)) {
             return false;
         }
-        foreach($source["dynamic_user_fields"] as $field){
-            if(!isset($user_data[strtolower($field)])){
-                return false;
+
+        // Si le carnet n’a pas de champ dynamique, il est toujours disponible
+        if (empty($source["dynamic_user_fields"])) {
+            return true;
+        }
+
+        // On vérifie si l’utilisateur possède au moins un des champs requis
+        foreach ($source["dynamic_user_fields"] as $field) {
+            if (isset($user_data[strtolower($field)]) && !empty($user_data[strtolower($field)])) {
+                return true;
             }
         }
-        return true;
+
+        // Si aucun champ dynamique n’est présent mais qu’on est dans une session normale, on autorise par défaut
+        // (utile pour éviter la disparition des carnets dans certains profils)
+        return isset($user_data['uid']);
     }
 
     public function getAddressbookList($p)
