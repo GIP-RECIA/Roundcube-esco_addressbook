@@ -2,7 +2,7 @@
 
 namespace EscoAddressbook;
 
-class LdapBackend extends rcube_ldap
+class LdapBackend extends \rcube_ldap
 {
     private $str_dyn = '%dynamic';
 
