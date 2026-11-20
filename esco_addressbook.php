@@ -12,6 +12,7 @@ class esco_addressbook extends rcube_plugin
 {
     public function init()
     {
+        $this->load_config();
         $this->add_hook('addressbooks_list', array($this, 'getAddressbookList'));
         $this->add_hook('addressbook_get', array($this, 'getAddressbookContent'));
 

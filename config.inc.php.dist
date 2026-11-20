@@ -1,0 +1,96 @@
+<?php
+
+$ldap_hosts     = rcmail::get_instance()->config->get('ldap_hosts');
+$ldap_bind_dn   = rcmail::get_instance()->config->get('ldap_bind_dn');
+$ldap_bind_pass = rcmail::get_instance()->config->get('ldap_bind_pass');
+
+
+$esco_ldap_common = array(
+    'hosts' => $ldap_hosts,
+    'port' => 389,
+    'use_tls' => false,
+    'user_specific' => true,
+    'base_dn' => 'ou=people,dc=esco-centre,dc=fr',
+    'bind_dn' => $ldap_bind_dn,
+    'bind_pass' => $ldap_bind_pass,
+    'writable' => false,
+    'ldap_version' => '3',
+    'network_timeout' => 30,
+    'search_fields' => array('mail', 'cn'),
+    'name_field' => 'cn',
+    'email_field' => 'mail',
+    'surname_field' => 'sn',
+    'firstname_field' => 'givenName',
+    'sub_fields' => array(),
+    'sort' => 'cn',
+    'scope' => 'sub',
+    'fuzzy_search' => true,
+    'sizelimit' => '3000',
+    'timelimit' => '0',
+);
+
+$eleve_fieldmap = array(
+    'name' => 'displayName',
+    'surname' => 'sn',
+    'firstname' => 'givenName',
+    'title' => 'personalTitle',
+    'email' => 'mail',
+    'phone:home' => 'homePhone',
+    'phone:work' => 'telephoneNumber',
+    'etablissements' => 'ESCOUAI:*',
+    'eleve:classe' => 'ENTEleveClasses:*',
+    'eleve:groupe' => 'ENTEleveGroupes:*',
+    'enseignant:classe' => 'ENTAuxEnsClasses:*',
+    'enseignant:groupe' => 'ENTAuxEnsGroupes:*',
+    'uid' => 'uid',
+);
+
+$prof_fieldmap = array(
+    'name' => 'displayName',
+    'surname' => 'sn',
+    'firstname' => 'givenName',
+    'title' => 'personalTitle',
+    'email' => 'mail',
+    'etablissements' => 'ESCOUAI:*',
+    'eleve:classe' => 'ENTEleveClasses:*',
+    'eleve:groupe' => 'ENTEleveGroupes:*',
+    'enseignant:classe' => 'ENTAuxEnsClasses:*',
+    'enseignant:groupe' => 'ENTAuxEnsGroupes:*',
+    'uid' => 'uid',
+
+);
+$config['esco_ldap']['Eleves_classe'] = array(
+        'name' => 'Élèves de ma classe',
+        'required_fields' => array('cn', 'mail', 'displayName', 'ESCOUAI', 'ENTEleveClasses'),
+        'fieldmap' => $eleve_fieldmap,
+        'dynamic_user_fields' => array('ENTEleveClasses'),
+        'dynamic_filter' => '(&(objectClass=ENTEleve)(mail=*)%dynamic)',
+        'filter' => '(&(objectClass=ENTPerson)(mail=*))',
+    ) + $esco_ldap_common;
+
+$config['esco_ldap']['Eleves_groupes'] = array(
+        'name' => 'Élèves de mes groupes',
+        'required_fields' => array('cn', 'mail', 'displayName', 'ESCOUAI', 'ENTEleveGroupes'),
+        'fieldmap' => $eleve_fieldmap,
+        'dynamic_user_fields' => array('ENTEleveGroupes'),
+        'dynamic_filter' => '(&(objectClass=ENTEleve)(mail=*)%dynamic)',
+        'filter' => '(&(objectClass=ENTPerson)(mail=*))',
+    ) + $esco_ldap_common;
+
+$config['esco_ldap']['Professeurs_classe'] = array(
+        'name' => 'Professeurs de ma classe',
+        'required_fields' => array('cn', 'mail', 'displayName', 'ESCOUAI', 'ENTAuxEnsClasses'),
+        'fieldmap' => $prof_fieldmap,
+        'dynamic_user_fields' => array('ENTEleveClasses', 'ENTAuxEnsClasses'),
+        'dynamic_filter' => '(&(objectClass=ENTAuxEnseignant)(mail=*)(ESCOPersonListeRouge=FALSE)%dynamic)',
+        'filter' => '(&(objectClass=ENTPerson)(mail=*)(ESCOPersonListeRouge=FALSE))',
+    ) + $esco_ldap_common;
+
+$config['esco_ldap']['Professeurs_groupes'] = array(
+        'name' => 'Professeurs de mes groupes',
+        'required_fields' => array('cn', 'mail', 'displayName', 'ESCOUAI', 'ENTAuxEnsGroupes'),
+        'fieldmap' => $prof_fieldmap,
+        'dynamic_user_fields' => array('ENTEleveGroupes', 'ENTAuxEnsGroupes'),
+        'dynamic_filter' => '(&(objectClass=ENTAuxEnseignant)(mail=*)(ESCOPersonListeRouge=FALSE)%dynamic)',
+        'filter' => '(&(objectClass=ENTPerson)(mail=*)(ESCOPersonListeRouge=FALSE))',
+    ) + $esco_ldap_common;
